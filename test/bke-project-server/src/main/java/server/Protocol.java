@@ -1,4 +1,4 @@
-package client;
+package server;
 
 import java.util.Objects;
 
@@ -9,7 +9,7 @@ import login.UserLogValidator;
  * Login format: #LOGIN#login;password
  * Message format: #MESS#message
  * 
- * @author £ukasz
+ * @author ï¿½ukasz
  *
  */
 
