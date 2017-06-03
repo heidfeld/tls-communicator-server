@@ -23,15 +23,13 @@ public class CreateUsersDatabase {
 		User user3 = new User(login3, password3);
 		User unauthorized = new User(login4, password4);
 		
-		DataBaseUtil ulv = new DataBaseUtil();
-		ulv.addNewUser(user1);
-		ulv.addNewUser(user2);
-		ulv.addNewUser(user3);
-		System.out.println(user1.toString() + " Authorization result: " + ulv.isAuthorized(user1));
-		System.out.println(user2.toString() + " Authorization result: " + ulv.isAuthorized(user2));
-		System.out.println(user3.toString() + " Authorization result: " + ulv.isAuthorized(user3));
-		System.out.println(unauthorized.toString() + " Authorization result: " + ulv.isAuthorized(unauthorized));
-
+		DataBaseUtil.addNewUser(user1);
+		DataBaseUtil.addNewUser(user2);
+		DataBaseUtil.addNewUser(user3);
+		System.out.println(user1.toString() + " Authorization result: " + DataBaseUtil.isAuthorized(user1));
+		System.out.println(user2.toString() + " Authorization result: " + DataBaseUtil.isAuthorized(user2));
+		System.out.println(user3.toString() + " Authorization result: " + DataBaseUtil.isAuthorized(user3));
+		System.out.println(unauthorized.toString() + " Authorization result: " + DataBaseUtil.isAuthorized(unauthorized));
 	}
 
 }

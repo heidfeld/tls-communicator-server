@@ -18,6 +18,7 @@ import javax.net.ssl.SSLServerSocketFactory;
 
 import entity.ChatMessage;
 import gui.ServerGUI;
+import login.DataBaseUtil;
 
 public class Server {
 
@@ -78,7 +79,7 @@ public class Server {
 
 	private ServerSocket generateServerSocket() throws KeyStoreException, IOException, NoSuchAlgorithmException,
 			CertificateException, FileNotFoundException, UnrecoverableKeyException, KeyManagementException {
-		char[] password = { 't', 'e', 's', 't', '1', '2', '3' };
+		char[] password = DataBaseUtil.getTlsPassword();
 		KeyStore ks = KeyStore.getInstance("PKCS12");
 		try (InputStream input = new FileInputStream("server.pfx")) {
 			ks.load(input, password);

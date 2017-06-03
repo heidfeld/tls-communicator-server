@@ -12,10 +12,10 @@ public class DataBaseUtil {
 	public static final String DRIVER = "org.sqlite.JDBC";
     public static final String DB_URL = "jdbc:sqlite:users.db";
  
-    private Connection conn;
-    private Statement stat;
+    private static Connection conn;
+    private static Statement stat;
     
-    public DataBaseUtil() {
+    static {
         try {
             Class.forName(DataBaseUtil.DRIVER);
         } catch (ClassNotFoundException e) {
@@ -30,16 +30,17 @@ public class DataBaseUtil {
             System.err.println("Problem z otwarciem polaczenia");
             e.printStackTrace();
         }
- 
         createTables();
     }
  
-    public boolean createTables()  {
-    	String dropUsers = "DROP TABLE IF EXISTS users;";
+    public static boolean createTables()  {
+    	//String dropUsers = "DROP TABLE IF EXISTS users;";
         String createUsers = "CREATE TABLE IF NOT EXISTS users (login varchar(255) PRIMARY KEY, password varchar(255))";
+        String createTls = "CREATE TABLE IF NOT EXISTS tls (password varchar(255));";
         try {
-        	stat.execute(dropUsers);
+        	//stat.execute(dropUsers);
             stat.execute(createUsers);
+            stat.execute(createTls);
         } catch (SQLException e) {
             System.err.println("Blad przy tworzeniu tabeli");
             e.printStackTrace();
@@ -48,7 +49,7 @@ public class DataBaseUtil {
         return true;
     }
 	
-	public boolean addNewUser(User user) {
+	public static boolean addNewUser(User user) {
         try {
             PreparedStatement prepStmt = conn.prepareStatement(
                     "insert into users values (?, ?);");
@@ -56,14 +57,51 @@ public class DataBaseUtil {
             prepStmt.setString(2, user.getPassword());
             prepStmt.execute();
         } catch (SQLException e) {
+        	closeConnection();
             System.err.println("Blad przy wstawianiu uzytkownika");
             e.printStackTrace();
             return false;
         }
+        closeConnection();
         return true;
 	}
 	
-	public boolean isAuthorized(User user) {
+	public static boolean setTlsPassword(String password) {
+        try {
+            PreparedStatement prepStmt = conn.prepareStatement(
+                    "insert into tls values (?);");
+            prepStmt.setString(1, password);
+            prepStmt.execute();
+        } catch (SQLException e) {
+        	closeConnection();
+            System.err.println("Insert error");
+            e.printStackTrace();
+            return false;
+        }
+        closeConnection();
+        return true;
+	}
+	
+	public static char[] getTlsPassword() {
+		return getTextTlsPassword().toCharArray();
+	}
+	
+	private static String getTextTlsPassword() {
+		try {
+            ResultSet result = stat.executeQuery("SELECT password FROM tls");
+            String password = "";
+            while(result.next()) {
+                password = result.getString("password");
+                break;
+            }
+            closeConnection();
+            return password;
+        } catch (SQLException e) {
+            throw new RuntimeException("Cannot get tls password from database.");
+        }
+	}
+	
+	public static boolean isAuthorized(User user) {
 		try {
             ResultSet result = stat.executeQuery("SELECT * FROM users");
             String login, password;
@@ -74,6 +112,7 @@ public class DataBaseUtil {
                 	return true;
                 }
             }
+            closeConnection();
         } catch (SQLException e) {
             e.printStackTrace();
             return false;
@@ -81,8 +120,9 @@ public class DataBaseUtil {
 		return false;
 	}
 
-    public void closeConnection() {
+    public static void closeConnection() {
         try {
+        	stat.close();
             conn.close();
         } catch (SQLException e) {
             System.err.println("Problem z zamknieciem polaczenia");
