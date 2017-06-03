@@ -35,8 +35,10 @@ public class UserLogValidator {
     }
  
     public boolean createTables()  {
+    	String dropUsers = "DROP TABLE IF EXISTS users;";
         String createUsers = "CREATE TABLE IF NOT EXISTS users (login varchar(255) PRIMARY KEY, password varchar(255))";
         try {
+        	stat.execute(dropUsers);
             stat.execute(createUsers);
         } catch (SQLException e) {
             System.err.println("Blad przy tworzeniu tabeli");
