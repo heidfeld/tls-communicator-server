@@ -19,11 +19,12 @@ import javax.net.ssl.SSLServerSocketFactory;
 import entity.ChatMessage;
 import gui.ServerGUI;
 import login.DataBaseUtil;
+import login.User;
 
 public class Server {
 
 	private static int id;
-	private ArrayList<ClientThread> clientThreads;
+	private HashMap<String, ClientThread> clientThreads;
 	private ServerGUI serverGui;
 	private SimpleDateFormat sdf;
 	private int port;
@@ -37,7 +38,7 @@ public class Server {
 		this.serverGui = sg;
 		this.port = port;
 		sdf = new SimpleDateFormat("HH:mm:ss");
-		clientThreads = new ArrayList<ClientThread>();
+		clientThreads = new HashMap<String, ClientThread>();
 	}
 
 	public void start() {
@@ -52,26 +53,25 @@ public class Server {
 				if (!keepGoing)
 					break;
 				ClientThread t = new ClientThread(socket);
-				clientThreads.add(t);
+				clientThreads.put(t.getUsername(), t);
 				t.start();
 			}
 			try {
 				serverSocket.close();
-				for (int i = 0; i < clientThreads.size(); ++i) {
-					ClientThread tc = clientThreads.get(i);
+				for (Map.Entry<String, ClientThread> entry : clientThreads.entrySet()) {
+					ClientThread tc = entry.getValue();
 					try {
 						tc.input.close();
 						tc.output.close();
 						tc.socket.close();
-					} catch (IOException ioE) {
-						// not much I can do
+					} catch (Exception e) {
+						throw new RuntimeException("Cannot close client thread.", e);
 					}
 				}
 			} catch (Exception e) {
 				display("Exception closing the server and clients: " + e);
 			}
-		}
-		catch (Exception e) {
+		} catch (Exception e) {
 			String msg = sdf.format(new Date()) + " Exception on new ServerSocket: " + e + "\n";
 			display(msg);
 		}
@@ -119,23 +119,35 @@ public class Server {
 		else
 			serverGui.appendRoom(messageFromat);
 
-		for (int i = clientThreads.size(); --i >= 0;) {
-			ClientThread ct = clientThreads.get(i);
+		for (Map.Entry<String, ClientThread> entry : clientThreads.entrySet()) {
+			ClientThread ct = entry.getValue();
 			if (!ct.writeMessage(messageFromat)) {
-				clientThreads.remove(i);
+				remove(entry.getKey());
 				display("Disconnected Client " + ct.username + " removed from list.");
 			}
 		}
 	}
 
-	synchronized void remove(int clientId) {
-		for (int i = 0; i < clientThreads.size(); ++i) {
-			ClientThread ct = clientThreads.get(i);
-			if (ct.uniqueId == clientId) {
-				clientThreads.remove(i);
-				return;
-			}
+	private synchronized void sendAuthorizationResult(String username, String message, boolean withDate) {
+		String messageFromat = message + "\n";
+		String time = sdf.format(new Date());
+		if (withDate) {
+			messageFromat = time + " " + message + "\n";
 		}
+		if (serverGui == null) {
+			System.out.print(time + " " + username + " authorization status: " + messageFromat);
+		} else {
+			serverGui.appendRoom(time + " " + username + " authorization status: " + messageFromat);
+		}
+		ClientThread ct = clientThreads.get(username);
+		if (!ct.writeMessage(messageFromat)) {
+			remove(username);
+			display("Disconnected Client " + ct.username + " removed from list.");
+		}
+	}
+
+	synchronized void remove(String username) {
+		clientThreads.remove(username);
 	}
 
 	public static void main(String[] args) {
@@ -186,6 +198,10 @@ public class Server {
 			date = new Date().toString() + "\n";
 		}
 
+		public String getUsername() {
+			return username;
+		}
+
 		public void run() {
 			boolean isAlive = true;
 			while (isAlive) {
@@ -200,6 +216,20 @@ public class Server {
 				String message = chatMessage.getMessage();
 
 				switch (chatMessage.getType()) {
+				case ChatMessage.LOGIN:
+					String[] parts = message.split(";");
+					String user = parts[0];
+					boolean authorized = DataBaseUtil.isAuthorized(new User(user, parts[1]));
+					String response = "Authorized";
+					if (authorized) {
+						sendAuthorizationResult(user, response, false);
+					} else {
+						response = "Unauthorized";
+						sendAuthorizationResult(user, response, false);
+						remove(user);
+					}
+					
+					break;
 				case ChatMessage.MESSAGE:
 					broadcast(username + ": " + message);
 					break;
@@ -209,14 +239,15 @@ public class Server {
 					break;
 				case ChatMessage.WHOISIN:
 					writeMessage("List of the users connected at " + sdf.format(new Date()) + "\n");
-					for (int i = 0; i < clientThreads.size(); ++i) {
-						ClientThread ct = clientThreads.get(i);
-						writeMessage((i + 1) + ") " + ct.username + " since " + ct.date);
+					for (Map.Entry<String, ClientThread> entry : clientThreads.entrySet()) {
+						ClientThread ct = entry.getValue();
+						writeMessage(ct.username + " since " + ct.date);
 					}
+					
 					break;
 				}
 			}
-			remove(uniqueId);
+			remove(username);
 			close();
 		}
 
@@ -246,8 +277,7 @@ public class Server {
 			}
 			try {
 				output.writeObject(msg);
-			}
-			catch (IOException e) {
+			} catch (IOException e) {
 				display("Error sending message to " + username);
 				display(e.toString());
 			}

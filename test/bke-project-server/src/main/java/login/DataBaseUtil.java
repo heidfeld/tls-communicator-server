@@ -57,12 +57,10 @@ public class DataBaseUtil {
             prepStmt.setString(2, user.getPassword());
             prepStmt.execute();
         } catch (SQLException e) {
-        	closeConnection();
             System.err.println("Blad przy wstawianiu uzytkownika");
             e.printStackTrace();
             return false;
         }
-        closeConnection();
         return true;
 	}
 	
@@ -73,12 +71,10 @@ public class DataBaseUtil {
             prepStmt.setString(1, password);
             prepStmt.execute();
         } catch (SQLException e) {
-        	closeConnection();
             System.err.println("Insert error");
             e.printStackTrace();
             return false;
         }
-        closeConnection();
         return true;
 	}
 	
@@ -94,7 +90,6 @@ public class DataBaseUtil {
                 password = result.getString("password");
                 break;
             }
-            closeConnection();
             return password;
         } catch (SQLException e) {
             throw new RuntimeException("Cannot get tls password from database.");
@@ -112,7 +107,6 @@ public class DataBaseUtil {
                 	return true;
                 }
             }
-            closeConnection();
         } catch (SQLException e) {
             e.printStackTrace();
             return false;
