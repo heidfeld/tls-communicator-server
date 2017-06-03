@@ -7,7 +7,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
-public class UserLogValidator {
+public class DataBaseUtil {
 	
 	public static final String DRIVER = "org.sqlite.JDBC";
     public static final String DB_URL = "jdbc:sqlite:users.db";
@@ -15,9 +15,9 @@ public class UserLogValidator {
     private Connection conn;
     private Statement stat;
     
-    public UserLogValidator() {
+    public DataBaseUtil() {
         try {
-            Class.forName(UserLogValidator.DRIVER);
+            Class.forName(DataBaseUtil.DRIVER);
         } catch (ClassNotFoundException e) {
             System.err.println("Brak sterownika JDBC");
             e.printStackTrace();

@@ -2,7 +2,7 @@ package test;
 
 import login.Encrypter;
 import login.User;
-import login.UserLogValidator;
+import login.DataBaseUtil;
 
 public class CreateUsersDatabase {
 
@@ -23,7 +23,7 @@ public class CreateUsersDatabase {
 		User user3 = new User(login3, password3);
 		User unauthorized = new User(login4, password4);
 		
-		UserLogValidator ulv = new UserLogValidator();
+		DataBaseUtil ulv = new DataBaseUtil();
 		ulv.addNewUser(user1);
 		ulv.addNewUser(user2);
 		ulv.addNewUser(user3);
