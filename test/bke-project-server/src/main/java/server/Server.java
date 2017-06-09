@@ -1,7 +1,13 @@
 package server;
 
-import java.io.*;
-import java.net.*;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.net.ServerSocket;
+import java.net.Socket;
 import java.security.KeyManagementException;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
@@ -9,13 +15,13 @@ import java.security.NoSuchAlgorithmException;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
 import java.text.SimpleDateFormat;
-import java.util.*;
-
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 import javax.net.ssl.KeyManager;
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLServerSocketFactory;
-
 import entity.ChatMessage;
 import gui.ServerGUI;
 import login.DataBaseUtil;
@@ -38,7 +44,7 @@ public class Server {
 		this.serverGui = sg;
 		this.port = port;
 		sdf = new SimpleDateFormat("HH:mm:ss");
-		clientThreads = new HashMap<String, ClientThread>();
+        clientThreads = new HashMap<>();
 	}
 
 	public void start() {
@@ -98,9 +104,8 @@ public class Server {
 		keepGoing = false;
 		try {
 			new Socket("localhost", port);
-		} catch (Exception e) {
-			// nothing I can really do
-		}
+        } catch (Exception e) {
+        }
 	}
 
 	private void display(String msg) {
@@ -161,7 +166,8 @@ public class Server {
 				System.out.println("Usage is: > java Server [portNumber]");
 				return;
 			}
-		case 0:
+            break;
+        case 0:
 			break;
 		default:
 			System.out.println("Usage is: > java Server [portNumber]");
